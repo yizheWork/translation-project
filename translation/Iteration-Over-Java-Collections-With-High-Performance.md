@@ -81,7 +81,7 @@ Then, the performance:
 
 With C style, JVM simply increases an integer, then reads the value directly from memory. This makes it very fast. But forEach is very different, according to this answer on StackOverFlow and document from Oracle, JVM has to convert forEach to an iterator and call hasNext() with every item. This is why forEach is slower than the C style.
 
-C 语言的形式，JVM 每次仅仅增加一个数字，然后直接从内存里读出数据。这使得它非常迅速。但是 forEach 就大不一样，根据 StackOverFlow 的[这篇回答](https://stackoverflow.com/questions/85190/how-does-the-java-for-each-loop-work/85206#85206)，和 Oracle 的[文章](https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html)，JVM 需要把 forEach 转换成一个 iterator，然后每个元素都调用一次 hasNext() 方法。这就是 forEach 比 C 语言的形式慢一些的原因。
+C 语言的形式，JVM 每次仅仅增加一个数字，然后直接从内存里读出数据。这使得它非常迅速。但是 forEach 就大不一样，根据 [StackOverFlow 的这篇回答](https://stackoverflow.com/questions/85190/how-does-the-java-for-each-loop-work/85206#85206)，和 [Oracle 的文章](https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html)，JVM 需要把 forEach 转换成一个 iterator，然后每个元素都调用一次 hasNext() 方法。这就是 forEach 比 C 语言的形式慢一些的原因。
 
 #### Which Is the High-Performance Way to Travelling Over Set?
 
