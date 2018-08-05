@@ -8,22 +8,22 @@ title: Iteration Over Java Collections With High Performance
 
 ###### Learn more about the forEach loop in Java and how it compares to C style and Stream API in this article on dealing with collections in Java.
 
-###### 本文用 Java 代码处理了容器，通过这些操作，你可以学到更多关于 Java 语言中 forEach 语法的知识，以及它和 C 语言形式、 Steam API 的对比。
+###### 通过本文，你可以更深入的学习 Java 语言中 forEach 语法的知识，以及它和 C 语言形式的 for 循环、 Steam API 的对比。
 
 #### Introduction
 Java developers usually deal with collections such as ArrayList and HashSet. Java 8 came with lambda and the streaming API that helps us to easily work with collections. In most cases, we work with a few thousands of items and performance isn't a concern. But, in some extreme situations, when we have to travel over a few millions of items several times, performance will become a pain.
 
 #### 简介
-Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的处理容器。大部分情况下，我们仅仅处理几千个元素，性能也不是什么问题。但是，在一些极端的场景下，如果我们需要遍历上百万个元素，性能就会成为让人头疼的问题。
+Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的处理容器。大部分情况下，我们仅仅处理几千个元素，性能也没什么问题。但是，在一些极端场景下，如果我们需要遍历上百万个元素，性能问题就凸显出来了。
 
 I use JMH for checking the running time of each code snippet.
 
-本文将采用 [JMH](http://openjdk.java.net/projects/code-tools/jmh/) 得出每块代码的运行时间。
+本文将采用 [JMH](http://openjdk.java.net/projects/code-tools/jmh/) 计算每块代码的运行时间。
 
 #### forEach vs. C Style vs. Stream API
 Iteration is a basic feature. All programming languages have simple syntax to allow programmers to run through collections. Stream API can iterate over Collections in a very straightforward manner.
 
-遍历是一个基本的功能。所有编程语言都有简单的语法，让程序员遍历一个容器。Steam API 以一种非常直接的形式遍历一个容器。
+遍历是一个基本的功能。所有编程语言都提供了简单的语法，让程序员去遍历容器。Steam API 以一种非常直接的形式来遍历容器。
 
     public List<Integer> streamSingleThread(BenchMarkState state){
         List<Integer> result = new ArrayList<>(state.testData.size());
@@ -56,7 +56,7 @@ forEach 循环也很简单：
 
 C style is more verbose, but still very compact:
 
-C 语言的形式啰嗦一些，不过依然很紧凑：
+C 语言的形式 for 循环啰嗦一些，不过依然很紧凑：
 
     public List<Integer> forCStyle(BenchMarkState state){
       int size = state.testData.size();
@@ -70,7 +70,7 @@ C 语言的形式啰嗦一些，不过依然很紧凑：
 
 Then, the performance:
 
-一下是性能报告：
+以下是性能报告：
 
     Benchmark                               Mode  Cnt   Score   Error  Units
     TestLoopPerformance.forCStyle           avgt  200  18.068 ± 0.074  ms/op
@@ -162,7 +162,7 @@ This is a nice idea, but it doesn't work because initializing the new ArrayList 
 HashMap (HashSet uses HashMap<E,Object>) isn't designed for iterating all items. The fastest way to iterate over
 HashMap is a combination of Iterator and the C style for loop, because JVM doesn't have to call hasNext().
 
-HashMap (使用 HashMap<E,Object> 的 HashSet) 并不是用来遍历所有项目的。遍历一个 HashMap 最快的方法是把 Iterator 和 C 语言形式结合起来，这样 JVM 就不会去调用 hasNext()。
+HashMap (使用 HashMap<E,Object> 的 HashSet) 不是为遍历所有项目。遍历一个 HashMap 最快的方法是把 Iterator 和 C 语言形式结合起来，这样 JVM 就不会去调用 hasNext()。
 
 #### Conclusion
 #### 结论
