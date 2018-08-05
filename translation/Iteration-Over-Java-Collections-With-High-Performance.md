@@ -1,6 +1,6 @@
 ---
 editor: yizheWork
-published: false
+published: true
 title: Iteration Over Java Collections With High Performance
 ---
 # Iteration Over Java Collections With High Performance
