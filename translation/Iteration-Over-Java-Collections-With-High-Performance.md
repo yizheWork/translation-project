@@ -14,7 +14,7 @@ title: Iteration Over Java Collections With High Performance
 Java developers usually deal with collections such as ArrayList and HashSet. Java 8 came with lambda and the streaming API that helps us to easily work with collections. In most cases, we work with a few thousands of items and performance isn't a concern. But, in some extreme situations, when we have to travel over a few millions of items several times, performance will become a pain.
 
 #### 简介
-Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的处理容器。大部分情况下，我们仅仅处理几千个元素，性能也没什么问题。但是，在一些极端场景下，如果我们需要遍历上百万个元素，性能问题就凸显出来了。
+Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的使用容器。大部分情况下，我们仅仅处理几千个元素，也不会去考虑性能。但是，在一些极端场景下，如果我们需要遍历上百万个元素，性能问题就凸显出来了。
 
 I use JMH for checking the running time of each code snippet.
 
@@ -24,7 +24,7 @@ I use JMH for checking the running time of each code snippet.
 Iteration is a basic feature. All programming languages have simple syntax to allow programmers to run through collections. Stream API can iterate over Collections in a very straightforward manner.
 
 遍历是一个基本的功能。所有编程语言都提供了简单的语法，让程序员去遍历容器。Steam API 以一种非常直接的形式来遍历容器。
-
+```java
     public List<Integer> streamSingleThread(BenchMarkState state){
         List<Integer> result = new ArrayList<>(state.testData.size());
         state.testData.stream().forEach(item -> {
@@ -39,12 +39,12 @@ Iteration is a basic feature. All programming languages have simple syntax to al
         });
         return result;
     }
-
+```
 
 The forEach  loop is just as simple:
 
 forEach 循环也很简单：
-
+```java
     public List<Integer> forEach(BenchMarkState state){
       List<Integer> result = new ArrayList<>(state.testData.size());
       for(Integer item : state.testData){
@@ -52,11 +52,12 @@ forEach 循环也很简单：
       }
       return result;
     }
-
+```
 
 C style is more verbose, but still very compact:
 
-C 语言的形式 for 循环啰嗦一些，不过依然很紧凑：
+C 语言形式的 for 循环啰嗦一些，不过依然很紧凑：
+```java
 
     public List<Integer> forCStyle(BenchMarkState state){
       int size = state.testData.size();
@@ -66,7 +67,7 @@ C 语言的形式 for 循环啰嗦一些，不过依然很紧凑：
       }
       return result;
     }
-
+```
 
 Then, the performance:
 
@@ -81,7 +82,7 @@ Then, the performance:
 
 With C style, JVM simply increases an integer, then reads the value directly from memory. This makes it very fast. But forEach is very different, according to this answer on StackOverFlow and document from Oracle, JVM has to convert forEach to an iterator and call hasNext() with every item. This is why forEach is slower than the C style.
 
-C 语言的形式，JVM 每次仅仅增加一个数字，然后直接从内存里读出数据。这使得它非常迅速。但是 forEach 就大不一样，根据 [StackOverFlow 的这篇回答](https://stackoverflow.com/questions/85190/how-does-the-java-for-each-loop-work/85206#85206)，和 [Oracle 的文章](https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html)，JVM 需要把 forEach 转换成一个 iterator，然后每个元素都调用一次 hasNext() 方法。这就是 forEach 比 C 语言的形式慢一些的原因。
+使用 C 语言形式的 for 循环，JVM 每次仅仅增加一个数字，然后直接从内存里读出数据。这使得它非常迅速。但是 forEach 就大不一样，根据 [StackOverFlow 的这篇回答](https://stackoverflow.com/questions/85190/how-does-the-java-for-each-loop-work/85206#85206)，和 [Oracle 的文章](https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html)，JVM 需要把 forEach 转换成一个 iterator，然后每个元素都调用一次 hasNext() 方法。这就是 forEach 比 C 语言的形式慢一些的原因。
 
 #### Which Is the High-Performance Way to Travelling Over Set?
 
@@ -90,6 +91,7 @@ C 语言的形式，JVM 每次仅仅增加一个数字，然后直接从内存�
 We define test data:
 
 我们先定义测试数据集：
+```java
 
     @State(Scope.Benchmark)
     public static class BenchMarkState {
@@ -105,11 +107,12 @@ We define test data:
         }
         public Set<Integer> testData = new HashSet<>(500000);
     }
-
+```
 
 The Java Set also supports Stream API and forEach loop. According to the previous test, if we convert Set to ArrayList, then travel over ArrayList, maybe the performance improve?
 
 Java 中的 Set 也支持 Steam API 和 forEach 循环。参考之前的测试，如果我们把 Set 转换成 ArrayList，然后遍历 ArrayList，或许性能会好一些？
+```java
 
     public List<Integer> forCStyle(BenchMarkState state){
         int size = state.testData.size();
@@ -120,11 +123,12 @@ Java 中的 Set 也支持 Steam API 和 forEach 循环。参考之前的测试�
         }
         return result;
     }
-
+```
 
 How about a combination of the iterator with the C style for loop?
 
 如果把 iterator 和 C 语言形式结合起来呢？
+```java
 
     public List<Integer> forCStyleWithIteration(BenchMarkState state){
         int size = state.testData.size();
@@ -136,10 +140,11 @@ How about a combination of the iterator with the C style for loop?
         return result;
     }
 
-
+```
 Or, what about simple travel?
 
 或者，简单的遍历怎么样？
+```java
 
     public List<Integer> forEach(BenchMarkState state){
         List<Integer> result = new ArrayList<>(state.testData.size());
@@ -148,7 +153,7 @@ Or, what about simple travel?
         }
         return result;
     }
-
+```
 
 This is a nice idea, but it doesn't work because initializing the new ArrayList also consumes resources.
 
@@ -162,7 +167,7 @@ This is a nice idea, but it doesn't work because initializing the new ArrayList 
 HashMap (HashSet uses HashMap<E,Object>) isn't designed for iterating all items. The fastest way to iterate over
 HashMap is a combination of Iterator and the C style for loop, because JVM doesn't have to call hasNext().
 
-HashMap (使用 HashMap<E,Object> 的 HashSet) 不是为遍历所有项目。遍历一个 HashMap 最快的方法是把 Iterator 和 C 语言形式结合起来，这样 JVM 就不会去调用 hasNext()。
+HashMap (使用 HashMap<E,Object> 的 HashSet) 不是为遍历所有元素设计的。遍历一个 HashMap 最快的方法是把 Iterator 和 C 语言形式结合起来，这样 JVM 就不会去调用 hasNext()。
 
 #### Conclusion
 #### 结论
