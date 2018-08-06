@@ -14,7 +14,7 @@ title: Iteration Over Java Collections With High Performance
 Java developers usually deal with collections such as ArrayList and HashSet. Java 8 came with lambda and the streaming API that helps us to easily work with collections. In most cases, we work with a few thousands of items and performance isn't a concern. But, in some extreme situations, when we have to travel over a few millions of items several times, performance will become a pain.
 
 #### 简介
-Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的使用容器。大部分情况下，我们仅仅处理几千个元素，也不会去考虑性能。但是，在一些极端场景下，如果我们需要遍历上百万个元素，性能问题就凸显出来了。
+Java 程序员经常使用容器，比如 ArrayList 和 HashSet。Java 8 中的 lambda 语法和 steaming API 可以让我们更方便的使用容器。大部分情况下，我们仅仅处理几千个元素，也不会去考虑性能问题。但是，在一些极端场景下，如果我们需要遍历上百万个元素，性能问题就凸显出来了。
 
 I use JMH for checking the running time of each code snippet.
 
