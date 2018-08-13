@@ -42,7 +42,7 @@ def foo(b: => String): String = b
 
 If we try to javap reverse-engineer the generated  *.class file , we'd see:
 
-如果用 javap 反编译上面生成的 *.class 文件，可以看到:
+如果用 javap 反编译上面生成的 `*.class` 文件，可以看到:
 
 ```java
 Compiled from "LazyFoo.scala"
@@ -122,9 +122,9 @@ Unfortunately, that simple approach is flawed. The computation will be triggered
 
 不幸的是，上面这个简单的方法是有缺陷的：每次调用都会触发一次计算。不仅多线程的调用有这个缺陷，同一个线程连续调用多次也有这个缺陷。不过，如果我们清楚这个缺陷，并且合理的使用这个技术，那就没什么问题。
 
-##Lazy Evaluation with Memoization
+## Lazy Evaluation with Memoization
 
-##使用缓存的惰性求值
+## 使用缓存的惰性求值
 
 As mentioned already, the lambda-based approach can be perceived as flawed in certain contexts because of the fact that the value never gets memorized. In order to fix that, we'd need to construct a dedicated tool, let's say Lazy:
 
@@ -247,9 +247,9 @@ As you can see, as long as #get isn't called at the end of the chain, nothing ge
 
 你可以看到，只要作为调用链底层的 #get 方法没有被调用，那么什么计算也不会触发。
 
-##Nulls
+## Nulls
 
-##Null 的处理
+## Null 的处理
 
 In some situations, null can be a valid value, but it won't work properly with our implementation - a valid null value gets treated just like an uninitialized value, which is not ideal.
 
@@ -267,9 +267,9 @@ Other than that, it'd be a good idea to explicitly forbid null values, for examp
 value = Objects.requireNonNull(supplier.get());
 ```
 
-##GCing an Unused Supplier
+## GCing an Unused Supplier
 
-##回收不再使用的 Supplier
+## 回收不再使用的 Supplier
 
 As some of you have probably already noticed, after the value gets evaluated, a supplier will never be used again, but it still occupies some resources.
 
@@ -279,7 +279,7 @@ The way to handle that would be to make the Supplier non-final and free it by se
 
 解决办法就是把 Supplier 标记为非 final 的，一旦结果计算完毕，就把它置为 null。
 
-##A Complete Example
+## A Complete Example
 
 ## 完整的例子
 
