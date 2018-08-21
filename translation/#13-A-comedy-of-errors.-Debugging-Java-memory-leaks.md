@@ -2,63 +2,63 @@
 
 We all make errors, but some errors seem so ridiculous we wonder how anyone, let alone we ourselves, could have done such a thing. This is, of course, easy to notice only after the fact. Below, I describe a series of such errors which we recently made in one of our applications. What makes it interesting is that initial symptoms indicated a completely different kind of problem than the one actually present.
 
-人人都会犯错误，但是一些错误看起来是如此可笑，让我们怀疑除了我们自己，还会有谁会犯这种错误。当然，只有事后才能发现。以下，我会描述一系列此等错误，我们在我们自己的应用上犯过的。让他变得有趣的是最开始的极限揭示了实际发生的完全不同的问题。
+人人都会犯错，但一些错误是如此荒谬，我们怀疑除了自己，怎么还会有其他人犯这种错误。当然，这种东西只有事后才能发现真相。接下来，我将讲述一系列最近在我们自己的一个应用上犯过的这种错误。最有意思的是，一开始的迹象揭示的问题，与实际发生的问题完全不同。
 
 ## Once upon a midnight dreary
 ## 在一个凄凉的夜晚
 
 
 I was woken up shortly after midnight by an alert from our monitoring system. Adventory, an application responsible for indexing ads in our [PPC (pay-per-click) advertising system](https://ads.allegro.pl/) had apparently restarted several times in a row. In a cloud environment, a restart of one single instance is a normal event and does not trigger any alerts, but this time the threshold had been exceeded by multiple instances restarting within a short period. I switched on my laptop and dived into the application’s logs.
-我是半夜听到我们监控系统发出的报警就起来了的。Adventory，我们的 [PPC （每点一次付一次钱）广告系统](https://ads.allegro.pl/)中一个负责索引广告的系统，显然连续重启了好几次。在一个云端的环境里，实例的重启是很正常的，不会触发任何报警，但是这次示例重启的次数已经在短时间内超过了阈值。我打开笔记本电脑，一头扎进项目的日志里。
+半夜里，刚听到监控系统发出的报警，我就醒了。Adventory，我们的 [PPC （以点击次数收费）广告系统](https://ads.allegro.pl/)中一个负责索引广告的应用，很明显连续重启了好几次。在云端的环境里，实例的重启是很正常的，也不会触发报警，但这次实例重启的次数在短时间内超过了阈值。我打开了笔记本电脑，一头扎进项目的日志里。
 
 ## It must be the network
 ## 一定是网络的问题
 
 I saw several timeouts as the service attempted connecting to [ZooKeeper](https://zookeeper.apache.org/). We use ZooKeeper (ZK) to coordinate indexing between multiple instances and rely on it to be robust. Clearly, a Zookeeper failure would prevent indexing from succeeding, but it shouldn’t cause the whole app to die. Still, this was such a rare situation (the first time I ever saw ZK go down in production) that I thought maybe we had indeed failed to handle this case gracefully. I woke up the on-duty person responsible for ZooKeeper and asked them to check what was going on.
-我看到服务尝试连接 [ZooKeeper](https://zookeeper.apache.org/) 时发生了数次超时。我们使用 ZooKeeper（ZK）协调多个实例的索引操作，并依赖它实现鲁棒性。很显然，一次 Zookeeper 失败会停止索引的运行，不过它不应该导致整个系统挂掉。而且，这种情况非常罕见（我第一次遇到 ZK 在生产环境挂掉），我想或许我们确实不能简单的解决这个问题了。我把负责 ZooKeeper 的值班人员叫醒了，让他们看看发生了什么。
+我看到服务在连接 [ZooKeeper](https://zookeeper.apache.org/) 时发生了数次超时。我们使用 ZooKeeper（ZK）协调多个实例间的索引操作，并依赖它实现鲁棒性。很显然，一次 Zookeeper 失败会阻止索引操作的继续运行，不过它应该不会导致整个系统挂掉。而且，这种情况非常罕见（这是我第一次遇到 ZK 在生产环境挂掉），我觉得这个问题可能不太容易搞定。于是我把 ZooKeeper 的值班人员喊醒了，让他们看看发生了什么。
 
 Meanwhile, I checked our configuration and realized that timeouts for ZooKeeper connections were in the multi-second range. Obviously, ZooKeeper was completely dead, and given that other applications were also using it, this meant serious trouble. I sent messages to a few more teams who were apparently not aware of the issue yet.
 
-同时，我检查了我们的配置，意识到 ZooKeeper 连接的超时时间是秒级的。很显然，ZooKeeper 完全挂了，鉴于其他服务也在使用它，这意味着非常严重的问题。我给其他几个团队发了消息，他们显然还不知道这事。
+同时，我检查了我们的配置，发现 ZooKeeper 连接的超时时间是秒级的。很明显，ZooKeeper 全挂了，由于其他服务也在使用它，这意味着问题非常严重。我给其他几个团队发了消息，他们显然还不知道这事儿。
 
 My colleague from ZooKeeper team got back to me, saying that everything looked perfectly normal from his point of view. Since other users seemed unaffected, I slowly realized ZooKeeper was not to blame. Logs clearly showed network timeouts, so I woke up the people responsible for networking.
 
-ZooKeeper 团队的同事回复我了，他说在他看来，系统运行一切正常。由于其他用户看起来没有受到影响，我慢慢意识到不是 ZooKeeper 的问题。日志里明显是网络超时，于是我把负责网络的同事叫醒了。
+ZooKeeper 团队的同事回复我了，在他看来，系统运行一切正常。由于其他用户看起来没有受到影响，我慢慢意识到不是 ZooKeeper 的问题。日志里明显是网络超时，于是我把负责网络的同事叫醒了。
 
 Networking team checked their metrics but found nothing of interest. While it is possible for a single segment of the network or even a single rack to get cut off from the rest, they checked the particular hosts on which my app instances were running and found no issues. I had checked a few side ideas in the meantime but none worked, and I was at my wit’s end. It was getting really late (or rather early) and, independently from my actions, restarts somehow became less frequent. Since this app only affected the freshness of data but not its availability, together with all involved we decided to let the issue wait until morning.
 
-网络团队检查了他们的监控，没有发现任何异常。由于网络中的一小段或者一个点和其余的节点隔断也是有可能的，他们检查了我的系统实例所在的几台机器，没有发现异常。同时，我也尝试了其他几种思路，不过都行不通，我已经达到能力的极限了。时间已经很晚了（或者说很早了），跟我的尝试没有任何关系的，重启变得不那么频繁了。由于服务仅仅影响了数据的刷新，并不会影响到数据的可用性，所有人，包括我在内，决定放着问题到上午再说。
+负责网络的团队检查了他们的监控，没有发现任何异常。由于网络中的一小段或一个节点，和其余的节点断开也是有可能的，他们检查了我的系统实例所在的几台机器，没有发现异常。同时，我也尝试了其他几种思路，不过都行不通，同时我也到了智力的极限。时间已经很晚了（或者说很早了），同时，跟我的尝试没有任何关系，重启变得不那么频繁了。由于这个服务仅仅负责数据的刷新，并不会影响到数据的可用性，我们决定把问题放到上午再说。
 
 ## It must be garbage collection
 ## 一定是 GC 的问题
 
 Sometimes it is a good idea to sleep on it and get back to a tough problem with a fresh mind. Nobody understood what was going on and the service behaved in a really magical way. Then it dawned on me. What is the main source of magic in Java applications? Garbage collection of course.
-有时候睡一觉，等脑子清醒了再去解决难题是一个好主意。没人知道到底发生了什么，服务表现的非常怪异。突然我想到了什么。Java 服务表现怪异的主要根源是什么？当然是垃圾收集。
+有时候把难题放一放，睡一觉，等脑子清醒了再去解决是一个好主意。没人知道当时发生了什么，服务表现的非常怪异。突然间，我想到了什么。Java 服务表现怪异的主要根源是什么？当然是垃圾收集。
 
 Just for cases like this, we keep GC logging on by default. I quickly downloaded the GC log and fired up [Censum](https://www.jclarity.com/censum/). Before my very eyes, a grisly sight opened: full garbage collections happening once every 15 minutes and causing 20-second long [!] stop-the-world pauses. No wonder the connection to ZooKeeper was timing out despite no issues with either ZooKeeper or the network!
-就是为了目前这种情况的发生，我们默认把 GC 的日志打开了。我迅速下载了 GC 日志然后打开了 [Censum](https://www.jclarity.com/censum/)。在我仔细查看前，一个吓人的景象呈现了：每15分钟发生一次 full GC，每次 GC 引起长达 20 秒的服务中断。怪不得连接 ZooKeeper 超时了，即使 ZooKeeper 和 网络都没有问题。
+为了应对目前这种情况的发生，我们一直打印着 GC 的日志。我马上把 GC 日志下载了下来，然后打开 [Censum](https://www.jclarity.com/censum/) 开始分析日志。我还没仔细看，就发现了一个恐怖的情况：每15分钟发生一次 full GC，每次 GC 引发长达 20 秒的服务停顿。怪不得连接 ZooKeeper 超时了，就算 ZooKeeper 和网络都没有问题。
 
 These pauses also explained why the whole application kept dying rather than just timing out and logging an error. Our apps run inside [Marathon](https://mesosphere.github.io/marathon/), which regularly polls a healthcheck endpoint of each instance and if the endpoint isn’t responding within reasonable time, Marathon restarts that instance.
-这些中断也解释了为什么整个服务一直是死掉的，而不是超时之后打一条错误日志。我们的服务运行在 [Marathon](https://mesosphere.github.io/marathon/)，它经常对每个服务的所有节点进行轮询，如果节点在合理的时间内没有响应，Marathon 就重启那个服务。
+这些停顿也解释了为什么整个服务一直是死掉的，而不是超时之后只打一条错误日志。我们的服务运行在 [Marathon](https://mesosphere.github.io/marathon/) 上，它定时检查每个实例的健康状态，如果某个端点在一段时间内没有响应，Marathon 就重启那个服务。
 
 ![20-second GC pauses — certainly not your average GC log](https://allegro.tech/img/articles/2018-02-09-a-comedy-of-errors-debugging-java-memory-leaks/adventory-gc-pause-20-s.png)
 
 Knowing the cause of a problem is half the battle, so I was very confident that the issue would be solved in no time. In order to explain my further reasoning, I have to say a bit more about how Adventory works, for it is not your standard microservice.
 
-知道问题的根源之后，问题就解决一半了，因为我很自信这个问题马上就能解决。为了解释我更深层的疑问，我需要多解释一下 Adventory 是如何工作的，它不是你们那种标准的微服务。
+知道原因之后，问题就解决一半了，因此我相信这个问题很快就能解决。为了解释我更深层的疑问，我需要再讲一下 Adventory 是如何工作的，它不像你们那种标准的微服务。
 
 Adventory is used for indexing our ads into [ElasticSearch (ES)](https://www.elastic.co/). There are two sides to this story. One is acquiring the necessary data. To this end, the app receives events sent from several other parts of the system via [Hermes](http://hermes.allegro.tech/). The data is saved to [MongoDB](http://mongodb.org/) collections. The traffic is a few hundred requests per second at most, and each operation is rather lightweight, so even though it certainly causes some memory allocation, it doesn’t require lots of resources. The other side of the story is indexing itself. This process is started periodically (around once every two minutes) and causes data from all the different MongoDB collections to be streamed using [RxJava](https://github.com/ReactiveX/RxJava), combined into denormalized records, and sent to ElasticSearch. This part of the application resembles an offline batch processing job more than a service.
 
-Adventory 是用来把我们的广告索引到 [ElasticSearch (ES)](https://www.elastic.co/)的。这需要两个步骤。第一个是获取所需的数据。到目前为止，这个服务从其他几个系统中接收通过 [Hermes](http://hermes.allegro.tech/) 发来的事件。数据保存到 [MongoDB](http://mongodb.org/) 集群中。数据量大概是每秒最多几百个请求，每个操作都是轻量级的，因此即使他会触发一些内存的回收，这也耗费不了多少资源。第二步就是数据的索引。这个操作定时执行（大概两分钟执行一次），把所有 MongoDB 集群中的数据通过 [RxJava](https://github.com/ReactiveX/RxJava) 收集到一个流里，组合为非规范化的记录，发送给 ElasticSearch。这部分操作类似离线的批处理任务，而不是一个服务。
+Adventory 是用来把我们的广告索引到 [ElasticSearch (ES)](https://www.elastic.co/) 的。这需要两个步骤。第一步是获取所需的数据。到目前为止，这个服务从其他几个系统中接收通过 [Hermes](http://hermes.allegro.tech/) 发来的事件。数据保存到 [MongoDB](http://mongodb.org/) 集群中。数据量最多每秒几百个请求，每个操作都特别轻量，因此即便触发一些内存的回收，也耗费不了多少资源。第二步就是数据的索引。这个操作定时执行（大概两分钟执行一次），把所有 MongoDB 集群存储的数据通过 [RxJava](https://github.com/ReactiveX/RxJava) 收集到一个流中，组合为非范式的记录，发送给 ElasticSearch。这部分操作类似离线的批处理任务，而不是一个服务。
 
 During each run, the whole index is rebuilt since there are usually so many changes to the data that incremental indexing is not worth the fuss. This means that a whole lot of data has to pass through the system and that a lot of memory allocation takes place, forcing us to use a heap as large as 12 GB despite using streams. Due to the large heap (and to being the one which is currently fully supported), our GC of choice was G1.
-每次执行过程中，整个索引都被重建了，因为数据经常有太多的更新，维护索引就没什么必要。这意味着一整块数据都要经过这个系统，引发大量的内存回收，这迫使我们把堆加到 12 GB 这么大，而且使用了 steam。由于如此巨大的堆（作为目前全力支持的），我们的 GC 选择了 G1。
+每执行一次，整个索引都重建一次。因为经常需要对数据做大量的更新，维护索引就不太值得。这意味着一整块数据都要经过这个系统，从而引发大量的内存回收。尽管使用了流的方式，我们也被迫把堆加到了 12 GB 这么大。由于堆是如此巨大（而且目前是被全力支持的），我们的 GC 选择了 G1。
 
 Having previously worked with some applications which allocate a lot of short-lived objects, I increased the size of young generation by increasing both `-XX:G1NewSizePercent` and `-XX:G1MaxNewSizePercent` from their default values so that more data could be handled by the young GC rather than being moved to old generation, as Censum showed a lot of premature tenuring. This was also consistent with the full GC collections taking place after some time. Unfortunately, these settings didn’t help one bit.
-由于在我之前处理过的服务中，都会回收大量生命周期很短的对象，我把新生代的大小调大了，通过同时增加 `-XX:G1NewSizePercent` 和 `-XX:G1MaxNewSizePercent` 的默认值，这样 young GC 可以处理更多的数据，而不是送到老年代，正如 Censum 展示的一些早期的阈值。这和一段时间以后发生的 full GC 也是一致的。不幸的是，这些设置都没有起到任何作用。
+我以前处理过的服务中，也会回收大量生命周期很短的对象。有了那些经验，我同时增加了 `-XX:G1NewSizePercent` 和 `-XX:G1MaxNewSizePercent` 的默认值，这样新生代会变得更大，young GC 就可以处理更多的数据，而不用把他们送到老年代。Censum 也显示了很多提前晋升。这和之后发生的 full GC 也是一致的。不幸的是，这些设置都没有起到任何作用。
 
 The next thing I thought was that perhaps the producer generated data too fast for the consumer to consume, thus causing records to be allocated faster than they could be freed. I tried to reduce the speed at which data was produced by the repository by decreasing the size of a thread pool responsible for generating the denormalized records while keeping the size of the consumer data pool which sent them off to ES unchanged. This was a primitive attempt at applying [backpressure](http://reactivex.io/documentation/operators/backpressure.html), but it didn’t help either.
-我想到的下一个问题是，或许生产者制造数据太快了，消费者来不及消费，导致这些记录在他们释放前就被回收了。我尝试减小成产数据的线程数量，来降低数据产生的速度，同时保持消费者发送给 ES 的数据池大小不变。这主要是应用 [backpressure](http://reactivex.io/documentation/operators/backpressure.html)，不过它也没有起到作用。
+接下来我想，或许生产者制造数据太快了，消费者来不及消费，导致这些记录在他们释放前就被回收了。我尝试减小成产数据的线程数量，来降低数据产生的速度，同时保持消费者发送给 ES 的数据池大小不变。这主要是使用 [负反馈](http://reactivex.io/documentation/operators/backpressure.html)，不过它也没有起到作用。
 
 ## It must be a memory leak
 ## 一定是内存泄漏
