@@ -131,7 +131,7 @@ However, the story was not over yet. Looking at GC logs, we still noticed lots o
 
 Premature tenuring (also known as premature promotion) happens when an object is short-lived but gets promoted to the old (tenured) generation anyway. Such objects may affect GC performance since they stuff up the old generation which is usually much larger and uses different GC algorithms than new generation. Therefore, premature promotion is something we want to avoid.
 
-过早提升（premature tenuring）（或者叫过早升级）即短生命周期的对象依然晋升到了老年代。老年代里的对象通常都比较大，使用与新生代不同的 GC 算法，而这些对象占据了老年代的空间，所以它们会影响 GC 的性能。因此，我们想竭力避免过早提升。
+如果一个对象的生命周期很短，但是它仍然晋升到了老年代，我们就把这种现象叫做过早提升（premature tenuring）（或者叫过早升级）。老年代里的对象通常都比较大，使用与新生代不同的 GC 算法，而这些过早提升的对象占据了老年代的空间，所以它们会影响 GC 的性能。因此，我们想竭力避免过早提升。
 
 We knew our app would produce lots of short-lived objects during indexing, so some premature promotion was no surprise, but its extent was. The first thing that comes to mind when dealing with an app that creates lots of short-lived objects is to simply increase the size of young generation. By default, G1GC can adjust the size of generations automatically, allowing for between 5% and 60% of the heap to be used by the new generation. I noticed that in the live app proportions of young and old generations changed all the time over a very wide range of proportions, but still went ahead and checked what would happen if I raised both bounds: `-XX:G1NewSizePercent=40` and `-XX:G1MaxNewSizePercent=90`. This did not help, and it actually made matters much worse, triggering full GCs almost immediately after the app started. I tried some other ratios, but the best I could arrive at was only increasing `G1MaxNewSizePercent` without modifying the minimum value: it worked about as well as defaults but not better.
 
